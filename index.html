@@ -5,126 +5,165 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Will you be my Valentine?</title>
 
-  <!-- Confetti library -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Perf: preconnect to CDNs -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://media1.giphy.com" crossorigin>
+
+  <!-- Confetti library (defer so it doesn't block render) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
-    :root {
-      --bg1: #ffd6e7;
-      --bg2: #ffeef6;
-      --card: #ffffffcc;
-      --yes: #ff3b7a;
-      --yesHover: #ff1f68;
+    :root{
+      --bg1:#ffd6e7;
+      --bg2:#ffeef6;
+      --card:#ffffffcc;
+      --yes:#ff3b7a;
+      --yesHover:#ff1f68;
+      --text:#111827;
+      --muted:rgba(17,24,39,.65);
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      min-height:100dvh;     /* modern dynamic viewport */
+      min-height:100svh;     /* stable viewport fallback */
+      display:grid;
+      place-items:center;
+      background:radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      overflow:hidden;
+
+      /* iPhone notch + home indicator safe areas (requires viewport-fit=cover) */
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+      /* Safe-area env vars are the standard approach for iPhone safe insets */
+      /* See: WebKit guidance and env() docs. */
+      /* (citations in message) */
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100svh;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
-      font-family: system-ui, sans-serif;
-      overflow: hidden;
-      padding: 16px;
+    /* Full-screen confetti canvas */
+    #confettiCanvas{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      pointer-events:none;
+      z-index:9999;
     }
 
-    /* FULL-SCREEN CONFETTI CANVAS */
-    #confettiCanvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 9999;
+    .card{
+      width:min(720px, 92vw);
+      padding:26px 22px;
+      background:var(--card);
+      border-radius:22px;
+      text-align:center;
+      box-shadow:0 18px 60px rgba(0,0,0,.15);
     }
 
-    .card {
-      width: min(720px, 92vw);
-      padding: 26px 22px;
-      background: var(--card);
-      backdrop-filter: blur(10px);
-      border-radius: 22px;
-      text-align: center;
-      box-shadow: 0 18px 60px rgba(0,0,0,.15);
+    /* backdrop-filter can be heavy; keep it progressive */
+    @supports (backdrop-filter: blur(10px)) {
+      .card{ backdrop-filter: blur(10px); }
     }
 
-    .art {
-      width: min(260px, 80vw);
-      margin: 0 auto 10px;
-      display: block;
-      filter: drop-shadow(0 10px 14px rgba(0,0,0,.12));
+    .art{
+      width:min(260px, 80vw);
+      margin:0 auto 10px;
+      display:block;
+      filter:drop-shadow(0 10px 14px rgba(0,0,0,.12));
     }
 
-    h1 {
-      font-size: clamp(26px, 4vw, 44px);
-      margin: 12px 0 18px;
+    h1{
+      font-size:clamp(26px, 4vw, 44px);
+      margin:12px 0 18px;
+      color:var(--text);
     }
 
-    .button-zone {
-      position: relative;
-      width: min(520px, 92%);
-      height: 150px;
-      margin: 0 auto;
-      touch-action: none;
+    .button-zone{
+      position:relative;
+      width:min(520px, 92%);
+      height:clamp(160px, 26vh, 240px);
+      margin:0 auto;
+      touch-action:none; /* we handle interactions ourselves */
+      user-select:none;
     }
 
-    button {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 16px 24px;
-      font-size: 18px;
-      font-weight: 800;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 10px 24px rgba(0,0,0,.14);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform .12s ease, background .12s ease;
+    button{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      padding:16px 24px;
+      font-size:18px;
+      font-weight:800;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      box-shadow:0 10px 24px rgba(0,0,0,.14);
+      -webkit-tap-highlight-color:transparent;
+      transition: transform .12s ease, background .12s ease, filter .12s ease;
+      touch-action:manipulation;
+      color:var(--text);
     }
 
-    #yesBtn {
-      left: 18%;
-      background: var(--yes);
-      color: #fff;
+    #yesBtn{
+      left:18%;
+      background:var(--yes);
+      color:#fff;
     }
-    #yesBtn:hover { background: var(--yesHover); }
+    #yesBtn:hover{ background:var(--yesHover); }
 
-    #noBtn {
-      left: 62%;
-      background: #e5e7eb;
-      color: #111827;
-    }
-
-    .hint {
-      margin-top: 10px;
-      font-size: 13px;
-      opacity: .7;
+    #noBtn{
+      left:62%;
+      background:#e5e7eb;
     }
 
-    .result {
-      display: none;
-      margin-top: 18px;
-      animation: pop .35s ease;
+    .hint{
+      margin-top:10px;
+      font-size:13px;
+      opacity:.8;
+      color:var(--muted);
     }
 
-    .result h2 {
-      font-size: clamp(30px, 4.5vw, 46px);
-      margin: 10px 0;
+    .result{
+      display:none;
+      margin-top:18px;
+      animation:pop .35s ease;
+    }
+    .result h2{
+      font-size:clamp(28px, 4.5vw, 46px);
+      margin:10px 0;
+      color:var(--text);
     }
 
-    .fireworks {
-      width: min(380px, 90vw);
-      margin: 0 auto;
-      display: block;
+    .fireworks{
+      width:min(380px, 90vw);
+      margin:0 auto;
+      display:block;
+      border-radius:14px;
+      box-shadow:0 10px 28px rgba(0,0,0,.12);
     }
 
-    @keyframes pop {
-      from { transform: scale(.96); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    /* pseudo-haptic micro-bounce */
+    .tap-bounce{
+      animation: tapBounce 130ms ease-out;
+    }
+    @keyframes tapBounce{
+      0%   { transform: translateY(-50%) scale(1); }
+      50%  { transform: translateY(-50%) scale(1.06); }
+      100% { transform: translateY(-50%) scale(1); }
+    }
+
+    @keyframes pop{
+      from{ transform:scale(.96); opacity:0; }
+      to{ transform:scale(1); opacity:1; }
+    }
+
+    /* accessibility: respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
     }
   </style>
 </head>
@@ -132,9 +171,9 @@
 <body>
   <canvas id="confettiCanvas"></canvas>
 
-  <main class="card">
-    <!-- ANIMAL WITH HEART -->
-    <svg class="art" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+  <main class="card" role="main">
+    <!-- Cute animal + heart -->
+    <svg class="art" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
         <linearGradient id="fur" x1="0" x2="1">
           <stop offset="0" stop-color="#f7c7a1"/>
@@ -173,132 +212,172 @@
 
     <h1>Harley Baobei, will you be my valentine?</h1>
 
-    <section class="button-zone" id="zone">
-      <button id="yesBtn">Yes</button>
-      <button id="noBtn">No</button>
+    <section class="button-zone" id="zone" aria-label="Valentine question buttons">
+      <button id="yesBtn" type="button">Yes</button>
+      <button id="noBtn" type="button">No</button>
     </section>
 
-    <!-- HINT -->
     <div class="hint" id="hint">Uhm you trying to click 'No' ah?</div>
 
-    <section class="result" id="result">
-      <h2>YAY! LET'S GOOO FOR AN EARLY VDAY DATE!🎉</h2>
+    <section class="result" id="result" aria-live="polite">
+      <h2>YAY! LET'S GOOO FOR AN EARLY VDAY DATE! 🎉</h2>
       <img
         class="fireworks"
         src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTY2OWkzM3FubnVjbmkybW54anF1ZmVkdG0wdXA5bjNianh2d3gxayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/COGHvkvkhNSqk/giphy.gif"
         alt="Fireworks"
+        loading="lazy"
+        decoding="async"
       />
     </section>
   </main>
 
   <script>
-    const zone = document.getElementById("zone");
-    const yesBtn = document.getElementById("yesBtn");
-    const noBtn = document.getElementById("noBtn");
-    const result = document.getElementById("result");
-    const hint = document.getElementById("hint");
+    // Wait for confetti library (loaded with defer)
+    window.addEventListener("DOMContentLoaded", () => {
+      const zone   = document.getElementById("zone");
+      const yesBtn = document.getElementById("yesBtn");
+      const noBtn  = document.getElementById("noBtn");
+      const result = document.getElementById("result");
+      const hint   = document.getElementById("hint");
 
-    /* ---------- CONFETTI ---------- */
-    const confettiCanvas = document.getElementById("confettiCanvas");
+      /* ---------- "HAPTIC" ---------- */
+      // Real vibration is NOT available on iOS Safari.
+      // We'll vibrate only if supported, else do a micro-bounce visual.
+      function haptic(kind = "light") {
+        // Android / supported
+        if ("vibrate" in navigator) {
+          const pattern = (kind === "success") ? [18, 20, 18] : 10;
+          try { navigator.vibrate(pattern); } catch (_) {}
+        }
 
-    function resizeConfettiCanvas() {
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
-      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
-      confettiCanvas.style.width = "100vw";
-      confettiCanvas.style.height = "100vh";
-    }
+        // Always add a tiny visual "tap" feel (works on iPhone too)
+        // Apply to YES button for feedback
+        yesBtn.classList.remove("tap-bounce");
+        // force reflow to restart animation
+        void yesBtn.offsetWidth;
+        yesBtn.classList.add("tap-bounce");
+      }
 
-    resizeConfettiCanvas();
-    window.addEventListener("resize", resizeConfettiCanvas);
-    window.addEventListener("orientationchange", () => setTimeout(resizeConfettiCanvas, 150));
+      /* ---------- CONFETTI ---------- */
+      const prefersReducedMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const confettiInstance = confetti.create(confettiCanvas, {
-      resize: false,
-      useWorker: true
-    });
+      const confettiCanvas = document.getElementById("confettiCanvas");
+      let confettiInstance = null;
 
-    function fullScreenConfetti() {
-      const end = Date.now() + 1600;
-
-      (function frame() {
-        confettiInstance({
-          particleCount: 12,
-          spread: 90,
-          startVelocity: 45,
-          ticks: 180,
-          origin: { x: Math.random(), y: Math.random() * 0.3 }
+      function initConfetti() {
+        if (!window.confetti || confettiInstance) return;
+        confettiInstance = confetti.create(confettiCanvas, {
+          resize: true,
+          useWorker: true
         });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      })();
+      }
 
-      setTimeout(() => {
-        confettiInstance({
-          particleCount: 300,
-          spread: 140,
-          startVelocity: 60,
-          ticks: 220,
-          origin: { x: 0.5, y: 0.55 }
+      function fullScreenConfetti() {
+        if (prefersReducedMotion) return;
+        initConfetti();
+        if (!confettiInstance) return;
+
+        const end = Date.now() + 1600;
+
+        (function frame() {
+          confettiInstance({
+            particleCount: 12,
+            spread: 90,
+            startVelocity: 45,
+            ticks: 180,
+            origin: { x: Math.random(), y: Math.random() * 0.3 }
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+
+        setTimeout(() => {
+          confettiInstance({
+            particleCount: 300,
+            spread: 140,
+            startVelocity: 60,
+            ticks: 220,
+            origin: { x: 0.5, y: 0.55 }
+          });
+        }, 300);
+      }
+
+      /* ---------- YES BUTTON GROWS ---------- */
+      let yesScale = 1;
+      function growYes() {
+        yesScale = Math.min(2.2, yesScale + 0.10);
+        yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
+      }
+
+      /* ---------- NO BUTTON RUNS AWAY ---------- */
+      function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+      }
+
+      function moveNo(px, py) {
+        const z = zone.getBoundingClientRect();
+        const b = noBtn.getBoundingClientRect();
+
+        let dx = (b.left + b.width / 2) - px;
+        let dy = (b.top + b.height / 2) - py;
+        let mag = Math.hypot(dx, dy) || 1;
+        dx /= mag; dy /= mag;
+
+        // Slightly larger jump + radius helps on touch screens
+        let newLeft = (b.left - z.left) + dx * 170;
+        let newTop  = (b.top  - z.top)  + dy * 170;
+
+        newLeft = clamp(newLeft, 0, z.width  - b.width);
+        newTop  = clamp(newTop,  0, z.height - b.height);
+
+        noBtn.style.left = newLeft + "px";
+        noBtn.style.top  = newTop  + "px";
+        noBtn.style.transform = "none";
+
+        growYes();
+        haptic("light");
+      }
+
+      function distanceToNo(x, y) {
+        const b = noBtn.getBoundingClientRect();
+        return Math.hypot((b.left + b.width / 2) - x, (b.top + b.height / 2) - y);
+      }
+
+      // Throttle pointer events to one per animation frame (smoother on iPhone)
+      let rafPending = false;
+      let lastX = 0, lastY = 0;
+
+      function requestDodge(x, y) {
+        lastX = x; lastY = y;
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          if (distanceToNo(lastX, lastY) < 175) moveNo(lastX, lastY);
         });
-      }, 300);
-    }
+      }
 
-    /* ---------- YES BUTTON GROWS ---------- */
-    let yesScale = 1;
-    function growYes() {
-      yesScale = Math.min(2.2, yesScale + 0.1);
-      yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
-    }
+      // Pointer Events unify touch/mouse interaction
+      zone.addEventListener("pointermove", (e) => requestDodge(e.clientX, e.clientY), { passive: true });
+      zone.addEventListener("pointerdown", (e) => requestDodge(e.clientX, e.clientY), { passive: true });
 
-    /* ---------- NO BUTTON RUNS AWAY ---------- */
-    function clamp(n, min, max) {
-      return Math.max(min, Math.min(max, n));
-    }
+      // If finger lands on NO directly, dodge immediately
+      noBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        requestDodge(e.clientX, e.clientY);
+      });
+      noBtn.addEventListener("click", (e) => e.preventDefault());
 
-    function moveNo(px, py) {
-      const z = zone.getBoundingClientRect();
-      const b = noBtn.getBoundingClientRect();
-
-      let dx = (b.left + b.width / 2) - px;
-      let dy = (b.top + b.height / 2) - py;
-      let mag = Math.hypot(dx, dy) || 1;
-      dx /= mag;
-      dy /= mag;
-
-      let newLeft = (b.left - z.left) + dx * 150;
-      let newTop  = (b.top - z.top) + dy * 150;
-
-      newLeft = clamp(newLeft, 0, z.width - b.width);
-      newTop  = clamp(newTop, 0, z.height - b.height);
-
-      noBtn.style.left = newLeft + "px";
-      noBtn.style.top = newTop + "px";
-      noBtn.style.transform = "none";
-
-      growYes();
-    }
-
-    zone.addEventListener("pointermove", e => {
-      const b = noBtn.getBoundingClientRect();
-      const d = Math.hypot(
-        (b.left + b.width / 2) - e.clientX,
-        (b.top + b.height / 2) - e.clientY
-      );
-      if (d < 140) moveNo(e.clientX, e.clientY);
-    });
-
-    noBtn.addEventListener("click", e => e.preventDefault());
-
-    /* ---------- YES CLICK ---------- */
-    yesBtn.addEventListener("click", () => {
-      zone.style.display = "none";
-      hint.style.display = "none";     // HIDE THE HINT
-      result.style.display = "block";
-      resizeConfettiCanvas();
-      fullScreenConfetti();
+      /* ---------- YES CLICK ---------- */
+      yesBtn.addEventListener("click", () => {
+        haptic("success");
+        zone.style.display = "none";
+        hint.style.display = "none";
+        result.style.display = "block";
+        fullScreenConfetti();
+      });
     });
   </script>
 </body>
 </html>
-
-
