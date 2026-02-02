@@ -5,165 +5,172 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Will you be my Valentine?</title>
 
-  <!-- Perf: preconnect to CDNs -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://media1.giphy.com" crossorigin>
-
-  <!-- Confetti library (defer so it doesn't block render) -->
+  <!-- Confetti library -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
-    :root{
-      --bg1:#ffd6e7;
-      --bg2:#ffeef6;
-      --card:#ffffffcc;
-      --yes:#ff3b7a;
-      --yesHover:#ff1f68;
-      --text:#111827;
-      --muted:rgba(17,24,39,.65);
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --yes: #ff3b7a;
+      --yesHover: #ff1f68;
+      --text: #111827;
+      --muted: rgba(17, 24, 39, .65);
     }
-    *{box-sizing:border-box;}
-    html,body{height:100%;}
-    body{
-      margin:0;
-      min-height:100dvh;     /* modern dynamic viewport */
-      min-height:100svh;     /* stable viewport fallback */
-      display:grid;
-      place-items:center;
-      background:radial-gradient(circle at top, var(--bg2), var(--bg1));
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      overflow:hidden;
 
-      /* iPhone notch + home indicator safe areas (requires viewport-fit=cover) */
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh; /* dynamic viewport */
+      min-height: 100svh; /* stable fallback */
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+
+      /* iPhone notch/home indicator safe areas */
       padding:
         max(16px, env(safe-area-inset-top))
         max(16px, env(safe-area-inset-right))
         max(16px, env(safe-area-inset-bottom))
         max(16px, env(safe-area-inset-left));
-      /* Safe-area env vars are the standard approach for iPhone safe insets */
-      /* See: WebKit guidance and env() docs. */
-      /* (citations in message) */
     }
 
-    /* Full-screen confetti canvas */
-    #confettiCanvas{
-      position:fixed;
-      inset:0;
-      width:100vw;
-      height:100vh;
-      pointer-events:none;
-      z-index:9999;
+    /* FULL-SCREEN CONFETTI CANVAS */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
     }
 
-    .card{
-      width:min(720px, 92vw);
-      padding:26px 22px;
-      background:var(--card);
-      border-radius:22px;
-      text-align:center;
-      box-shadow:0 18px 60px rgba(0,0,0,.15);
+    .card {
+      width: min(720px, 92vw);
+      padding: 26px 22px;
+      background: var(--card);
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.15);
+
+      /* IMPORTANT: prevents image overflow painting outside the card */
+      overflow: hidden;
     }
 
-    /* backdrop-filter can be heavy; keep it progressive */
+    /* Progressive enhancement only */
     @supports (backdrop-filter: blur(10px)) {
-      .card{ backdrop-filter: blur(10px); }
+      .card { backdrop-filter: blur(10px); }
     }
 
-    .art{
-      width:min(260px, 80vw);
-      margin:0 auto 10px;
-      display:block;
-      filter:drop-shadow(0 10px 14px rgba(0,0,0,.12));
+    .art {
+      width: min(260px, 80vw);
+      margin: 0 auto 10px;
+      display: block;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.12));
     }
 
-    h1{
-      font-size:clamp(26px, 4vw, 44px);
-      margin:12px 0 18px;
-      color:var(--text);
+    h1 {
+      font-size: clamp(26px, 4vw, 44px);
+      margin: 12px 0 18px;
+      color: var(--text);
     }
 
-    .button-zone{
-      position:relative;
-      width:min(520px, 92%);
-      height:clamp(160px, 26vh, 240px);
-      margin:0 auto;
-      touch-action:none; /* we handle interactions ourselves */
-      user-select:none;
+    .button-zone {
+      position: relative;
+      width: min(520px, 92%);
+      height: clamp(160px, 26vh, 240px);
+      margin: 0 auto;
+      touch-action: none;
+      user-select: none;
     }
 
-    button{
-      position:absolute;
-      top:50%;
-      transform:translateY(-50%);
-      padding:16px 24px;
-      font-size:18px;
-      font-weight:800;
-      border-radius:999px;
-      border:none;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(0,0,0,.14);
-      -webkit-tap-highlight-color:transparent;
-      transition: transform .12s ease, background .12s ease, filter .12s ease;
-      touch-action:manipulation;
-      color:var(--text);
+    button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 16px 24px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.14);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .12s ease, background .12s ease;
+      touch-action: manipulation;
     }
 
-    #yesBtn{
-      left:18%;
-      background:var(--yes);
-      color:#fff;
+    #yesBtn {
+      left: 18%;
+      background: var(--yes);
+      color: #fff;
     }
-    #yesBtn:hover{ background:var(--yesHover); }
+    #yesBtn:hover { background: var(--yesHover); }
 
-    #noBtn{
-      left:62%;
-      background:#e5e7eb;
-    }
-
-    .hint{
-      margin-top:10px;
-      font-size:13px;
-      opacity:.8;
-      color:var(--muted);
+    #noBtn {
+      left: 62%;
+      background: #e5e7eb;
+      color: #111827;
     }
 
-    .result{
-      display:none;
-      margin-top:18px;
-      animation:pop .35s ease;
-    }
-    .result h2{
-      font-size:clamp(28px, 4.5vw, 46px);
-      margin:10px 0;
-      color:var(--text);
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: .85;
+      color: var(--muted);
     }
 
-    .fireworks{
-      width:min(380px, 90vw);
-      margin:0 auto;
-      display:block;
-      border-radius:14px;
-      box-shadow:0 10px 28px rgba(0,0,0,.12);
+    .result {
+      display: none;
+      margin-top: 18px;
+      animation: pop .35s ease;
     }
 
-    /* pseudo-haptic micro-bounce */
-    .tap-bounce{
-      animation: tapBounce 130ms ease-out;
+    .result h2 {
+      font-size: clamp(28px, 4.5vw, 46px);
+      margin: 10px 0;
+      color: var(--text);
     }
-    @keyframes tapBounce{
+
+    /* === CRITICAL FIX FOR iPHONE GIF OVERFLOW === */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .fireworks {
+      width: min(380px, 90vw);
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      border-radius: 14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.12);
+    }
+
+    /* Pseudo-haptic micro bounce */
+    .tap-bounce { animation: tapBounce 130ms ease-out; }
+    @keyframes tapBounce {
       0%   { transform: translateY(-50%) scale(1); }
       50%  { transform: translateY(-50%) scale(1.06); }
       100% { transform: translateY(-50%) scale(1); }
     }
 
-    @keyframes pop{
-      from{ transform:scale(.96); opacity:0; }
-      to{ transform:scale(1); opacity:1; }
+    @keyframes pop {
+      from { transform: scale(.96); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
     }
 
-    /* accessibility: respect reduced motion */
-    @media (prefers-reduced-motion: reduce){
-      *{ animation:none !important; transition:none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -171,8 +178,8 @@
 <body>
   <canvas id="confettiCanvas"></canvas>
 
-  <main class="card" role="main">
-    <!-- Cute animal + heart -->
+  <main class="card">
+    <!-- ANIMAL WITH HEART -->
     <svg class="art" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
         <linearGradient id="fur" x1="0" x2="1">
@@ -212,14 +219,14 @@
 
     <h1>Harley Baobei, will you be my valentine?</h1>
 
-    <section class="button-zone" id="zone" aria-label="Valentine question buttons">
+    <section class="button-zone" id="zone">
       <button id="yesBtn" type="button">Yes</button>
       <button id="noBtn" type="button">No</button>
     </section>
 
     <div class="hint" id="hint">Uhm you trying to click 'No' ah?</div>
 
-    <section class="result" id="result" aria-live="polite">
+    <section class="result" id="result">
       <h2>YAY! LET'S GOOO FOR AN EARLY VDAY DATE! 🎉</h2>
       <img
         class="fireworks"
@@ -232,7 +239,6 @@
   </main>
 
   <script>
-    // Wait for confetti library (loaded with defer)
     window.addEventListener("DOMContentLoaded", () => {
       const zone   = document.getElementById("zone");
       const yesBtn = document.getElementById("yesBtn");
@@ -241,20 +247,15 @@
       const hint   = document.getElementById("hint");
 
       /* ---------- "HAPTIC" ---------- */
-      // Real vibration is NOT available on iOS Safari.
-      // We'll vibrate only if supported, else do a micro-bounce visual.
+      // iOS Safari doesn't support navigator.vibrate; it will simply do nothing there. [1](https://www.w3schools.com/JS/js_api_pointer_events.asp)[2](https://caniuse.com/pointer)
       function haptic(kind = "light") {
-        // Android / supported
         if ("vibrate" in navigator) {
           const pattern = (kind === "success") ? [18, 20, 18] : 10;
           try { navigator.vibrate(pattern); } catch (_) {}
         }
-
-        // Always add a tiny visual "tap" feel (works on iPhone too)
-        // Apply to YES button for feedback
+        // Always add a tiny bounce (works on iPhone)
         yesBtn.classList.remove("tap-bounce");
-        // force reflow to restart animation
-        void yesBtn.offsetWidth;
+        void yesBtn.offsetWidth; // restart animation
         yesBtn.classList.add("tap-bounce");
       }
 
@@ -268,10 +269,7 @@
 
       function initConfetti() {
         if (!window.confetti || confettiInstance) return;
-        confettiInstance = confetti.create(confettiCanvas, {
-          resize: true,
-          useWorker: true
-        });
+        confettiInstance = confetti.create(confettiCanvas, { resize: true, useWorker: true });
       }
 
       function fullScreenConfetti() {
@@ -280,7 +278,6 @@
         if (!confettiInstance) return;
 
         const end = Date.now() + 1600;
-
         (function frame() {
           confettiInstance({
             particleCount: 12,
@@ -311,22 +308,19 @@
       }
 
       /* ---------- NO BUTTON RUNS AWAY ---------- */
-      function clamp(n, min, max) {
-        return Math.max(min, Math.min(max, n));
-      }
+      function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
       function moveNo(px, py) {
         const z = zone.getBoundingClientRect();
         const b = noBtn.getBoundingClientRect();
 
         let dx = (b.left + b.width / 2) - px;
-        let dy = (b.top + b.height / 2) - py;
+        let dy = (b.top  + b.height / 2) - py;
         let mag = Math.hypot(dx, dy) || 1;
         dx /= mag; dy /= mag;
 
-        // Slightly larger jump + radius helps on touch screens
         let newLeft = (b.left - z.left) + dx * 170;
-        let newTop  = (b.top  - z.top)  + dy * 170;
+        let newTop  = (b.top  - z.top ) + dy * 170;
 
         newLeft = clamp(newLeft, 0, z.width  - b.width);
         newTop  = clamp(newTop,  0, z.height - b.height);
@@ -344,7 +338,7 @@
         return Math.hypot((b.left + b.width / 2) - x, (b.top + b.height / 2) - y);
       }
 
-      // Throttle pointer events to one per animation frame (smoother on iPhone)
+      // Throttle to animation frame (smooth on iPhone)
       let rafPending = false;
       let lastX = 0, lastY = 0;
 
@@ -358,11 +352,9 @@
         });
       }
 
-      // Pointer Events unify touch/mouse interaction
       zone.addEventListener("pointermove", (e) => requestDodge(e.clientX, e.clientY), { passive: true });
       zone.addEventListener("pointerdown", (e) => requestDodge(e.clientX, e.clientY), { passive: true });
 
-      // If finger lands on NO directly, dodge immediately
       noBtn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         requestDodge(e.clientX, e.clientY);
